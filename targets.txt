@@ -1,0 +1,2 @@
+# Add your targets here — one IP / CIDR / range per line.
+# See targets.example.txt for the supported formats.

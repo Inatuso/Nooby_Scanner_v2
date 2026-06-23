@@ -1,20 +1,12 @@
-# Real targets and credentials must never be committed
-targets.txt
-data/*.creds.json
-creds/vnc.txt
+# Private repo — working data (creds, targets, scan results) is committed too.
 
-# Scan output (CSV, HTML, checkpoints, history)
-results/
-
-# The two original standalone projects this tool was fused from
-# (each has its own repository — not part of this one)
+# The two original standalone projects this tool was fused from each have their
+# OWN git repository. They are kept out of THIS repo to avoid a broken
+# nested-repository state (see note from the assistant about submodules).
 Script Project/
 VNC scanner/
 
-# Stray screenshots dropped in the working tree
-/Screenshot*.png
-
+# Local tooling / compiled junk (not project content)
 __pycache__/
 *.pyc
 .claude/
-*.zip

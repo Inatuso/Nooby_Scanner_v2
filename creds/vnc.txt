@@ -1,0 +1,6 @@
+# VNC passwords to test — one per line. Lines starting with # are ignored.
+# Classic VNC Authentication is PASSWORD-ONLY (no username) and ignores
+# anything past the first 8 characters. Pick the three you want to try.
+password
+admin
+123456

@@ -1,0 +1,13 @@
+timestamp,ip,port,service,detected,url,proto,security,auth,username,password,error,info
+2026-06-23T14:05:00,10.0.0.12,443,iLO,yes,https://10.0.0.12,,default-creds,SUCCESS,Administrator,password,,
+2026-06-23T14:05:00,10.0.0.45,443,SATO,yes,https://10.0.0.45,,default-creds,SUCCESS,settings,0310,,
+2026-06-23T14:05:00,10.0.0.7,5900,VNC,yes,vnc://10.0.0.7:5900,3.8,none,OPEN,(no auth),,,
+2026-06-23T14:05:00,10.0.0.9,5900,VNC,yes,vnc://10.0.0.9:5900,3.8,vncauth,SUCCESS,password,secret,,
+2026-06-23T14:05:00,10.0.0.50,443,Schneider,yes,https://10.0.0.50,,,failed,,,,
+2026-06-23T14:05:00,10.0.0.30,80,Zebra,yes,https://10.0.0.30,,,failed,,,,
+2026-06-23T14:05:00,10.0.0.6,3389,RDP,yes,rdp://10.0.0.6:3389,RDP,CredSSP (NLA),,,,,
+2026-06-23T14:05:00,10.0.0.18,3389,RDP,yes,rdp://10.0.0.18:3389,RDP,Standard RDP,,,,,legacy security!
+2026-06-23T14:05:00,10.0.0.5,22,SSH,yes,ssh://10.0.0.5:22,2.0,open-port,,,,,SSH-2.0-OpenSSH_9.6
+2026-06-23T14:05:00,10.0.0.22,22,SSH,yes,ssh://10.0.0.22:22,2.0,open-port,,,,,SSH-2.0-dropbear_2022.83
+2026-06-23T14:05:00,10.0.0.61,80,XPort,yes,https://10.0.0.61,,,failed,,,,
+2026-06-23T14:05:00,10.0.0.77,443,InfoPrint,yes,https://10.0.0.77,,,failed,,,,
