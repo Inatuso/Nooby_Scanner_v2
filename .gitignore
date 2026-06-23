@@ -1,0 +1,20 @@
+# Real targets and credentials must never be committed
+targets.txt
+data/*.creds.json
+creds/vnc.txt
+
+# Scan output (CSV, HTML, checkpoints, history)
+results/
+
+# The two original standalone projects this tool was fused from
+# (each has its own repository — not part of this one)
+Script Project/
+VNC scanner/
+
+# Stray screenshots dropped in the working tree
+/Screenshot*.png
+
+__pycache__/
+*.pyc
+.claude/
+*.zip

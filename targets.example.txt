@@ -1,0 +1,7 @@
+# Targets — one per line. Lines starting with # are ignored.
+# Formats:
+10.0.0.5                    # single IP
+10.0.0.0/24                 # CIDR subnet
+10.0.0.1-50                 # short range (same /24)
+10.0.0.1-10.0.1.50          # full range (multi-subnet)
+# Note: no leading zeros in octets — write 10.0.0.5, not 10.0.0.05

@@ -1,0 +1,3 @@
+requests
+rich>=13.0
+cryptography>=42.0
