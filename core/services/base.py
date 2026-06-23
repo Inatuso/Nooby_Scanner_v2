@@ -32,6 +32,7 @@ class Service:
     creds_filename: str = ""
     patterns: re.Pattern = re.compile("")
     config_path: str = "/"
+    requires_auth: bool = True   # False = no login (detection alone is the result)
     user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     ports: tuple = (443, 80)
     timeout: int = 10
@@ -142,6 +143,53 @@ class Service:
             time.sleep(1)
         return False, None, None
 
+    def _json_login(self, base_url: str, session: requests.Session, *,
+                    auth_path: str, build_payload, prime_path: str = "/",
+                    csrf_cookie: str | None = None, csrf_header: str = "X-CSRFToken",
+                    fail_markers: re.Pattern | None = None,
+                    extra_headers: dict | None = None):
+        """Login flow for JSON APIs (e.g. ThousandEyes, Schneider Link 150).
+
+        These appliances answer the login with a real status code (200 on
+        success, 401/403 on bad creds), so a clean 200 without an error body is
+        the success signal. Optionally echoes a CSRF token taken from a cookie.
+        """
+        creds = self._load_creds()
+        base = base_url.rstrip("/")
+        self._fetch(base + prime_path, session)          # prime: get session + CSRF cookie
+
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json, text/plain, */*",
+            "Origin": base,
+            "Referer": base + prime_path,
+            "X-Requested-With": "XMLHttpRequest",
+        }
+        if extra_headers:
+            headers.update(extra_headers)
+        if csrf_cookie:
+            for name, val in session.cookies.items():
+                if csrf_cookie.lower() in name.lower():
+                    headers[csrf_header] = val
+                    break
+
+        for cred in creds[:self.max_creds]:
+            logging.info("  [%s] Trying %s on %s", self.name,
+                         cred.get("username") or "<empty>", base + auth_path)
+            try:
+                r = session.post(base + auth_path, json=build_payload(cred), headers=headers,
+                                 timeout=self.timeout, verify=False, allow_redirects=False)
+            except Exception as e:
+                logging.debug("  POST failed: %s", e)
+                time.sleep(1)
+                continue
+            if r is not None and r.status_code in (200, 201, 204):
+                body = r.text or ""
+                if not (fail_markers and fail_markers.search(body)):
+                    return True, cred.get("username", ""), cred.get("password", "")
+            time.sleep(1)
+        return False, None, None
+
     # -- overridable steps --------------------------------------------------
 
     def detect(self, base_url: str, session: requests.Session) -> bool:
@@ -196,6 +244,14 @@ class Service:
         if not detected:
             return ScanResult(ip=ip, service=self.name, detected=False, url=url,
                               port=chosen_port, error=None)
+
+        # Services like CiscoVoIP expose data with no login — detection IS the
+        # result, so don't attempt (or report) an auth step for them.
+        if not self.requires_auth:
+            return ScanResult(
+                ip=ip, service=self.name, detected=True, url=url, port=chosen_port,
+                auth_applicable=False, security="exposed (no auth)", error=None,
+            )
 
         auth_success, u, p = False, None, None
         if check_auth:

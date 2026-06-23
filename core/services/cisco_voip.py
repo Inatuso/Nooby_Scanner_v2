@@ -16,6 +16,7 @@ class CiscoVoIPService(Service):
         re.IGNORECASE,
     )
     config_path = "/CGI/Java/Serviceability?adapter=device.statistics.device"
+    requires_auth = False   # device-info page is unauthenticated — finding it is the result
 
     def detect(self, base_url, session):
         # Require a genuine phone marker on the device-info page (or the root) —

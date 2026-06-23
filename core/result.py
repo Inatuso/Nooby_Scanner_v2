@@ -23,6 +23,7 @@ class ScanResult:
     proto:        str | None = None      # RFB version, SSH banner, RDP selected protocol
     security:     str | None = None      # none | vncauth | NLA | TLS | RDP | open …
     info:         str | None = None      # freeform extra (banner text, note)
+    auth_applicable: bool = True         # False for services with no login (e.g. CiscoVoIP)
     # filled in by the runner so checkpoint/resume can dedupe jobs
     key:          str = field(default="", compare=False)
 

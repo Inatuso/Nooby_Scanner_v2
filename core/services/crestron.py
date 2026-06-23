@@ -6,12 +6,11 @@ from .base import Service
 class CrestronService(Service):
     name = "Crestron"
     creds_filename = "crestron.creds.json"
-    # Specific vendor strings only. "Device Administration" alone was too
-    # generic and matched unrelated appliances (false positives).
-    patterns = re.compile(
-        r"Crestron Electronics|crestron\.com|/userlogin\.html|CrestronSecureWebSocket",
-        re.IGNORECASE,
-    )
+    # Require the literal word "Crestron" (in body, headers or a cookie). The
+    # old set included the request path "/userlogin.html" — which servers echo
+    # back in their 404 page, so ANY device got flagged as Crestron (e.g. the
+    # InfoPrint 6700, and plain HTTP-Basic-Auth pages). Path literals removed.
+    patterns = re.compile(r"\bCrestron\b|crestron\.com", re.IGNORECASE)
     config_path = "/userlogin.html"
 
     _AUTH_PATH = "/userlogin.html"

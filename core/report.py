@@ -90,6 +90,8 @@ class ScanReport:
             self._print_progress()
 
     def _auth_label(self, r: ScanResult) -> str:
+        if not r.auth_applicable:
+            return "n/a"
         if r.auth_success:
             return "SUCCESS"
         if r.security == "none":

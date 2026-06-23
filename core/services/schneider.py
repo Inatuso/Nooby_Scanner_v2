@@ -6,22 +6,21 @@ from .base import Service
 class SchneiderService(Service):
     name = "Schneider"
     creds_filename = "schneider.creds.json"
-    # "icon-motor" dropped — too generic. Keep vendor-specific markers.
+    # "icon-motor" and the request path "/rs/login" dropped (the path is echoed
+    # in 404s -> false positives). Vendor-specific content markers only.
     patterns = re.compile(
-        r"Schneider Electric|Link 150|login-error-account|/rs/login",
+        r"Schneider Electric|Link 150|login-error-account",
         re.IGNORECASE,
     )
     config_path = "/"
 
+    # Link 150 posts JSON to /rs/login (Content-Type: application/json),
+    # NOT form-encoded — that was why valid creds were reported as failed.
     _AUTH_PATH = "/rs/login"
-    # Login form still present / explicit error -> auth failed.
-    _FAIL_MARKERS = re.compile(
-        r'login-error-account|id="login-form"|type="password"|invalid|incorrect',
-        re.IGNORECASE,
-    )
+    _FAIL_MARKERS = re.compile(r'login-error-account|invalid|incorrect|denied|"error"', re.IGNORECASE)
 
     def try_login(self, base_url, session):
-        return self._form_login(
+        return self._json_login(
             base_url, session,
             auth_path=self._AUTH_PATH,
             prime_path="/",
