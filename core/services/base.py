@@ -13,6 +13,7 @@ import json
 import logging
 import re
 import socket
+import time
 from pathlib import Path
 
 import requests
@@ -80,6 +81,66 @@ class Service:
         s = requests.Session()
         s.headers["User-Agent"] = self.user_agent
         return s
+
+    # -- evidence-based form login -----------------------------------------
+    #
+    # A login is only reported as successful when there is POSITIVE proof of a
+    # session: either a redirect to a non-login page, or a session cookie that
+    # the server set on the POST response. A bare 200 that just re-renders the
+    # page is treated as a FAILURE. This deliberately errs toward false
+    # negatives (safer for a security tool than crying wolf).
+
+    def _login_proof(self, response: requests.Response | None,
+                     cookies_before: set[str],
+                     fail_markers: re.Pattern | None) -> bool:
+        if response is None:
+            return False
+        sc = response.status_code
+        if sc >= 400:                                  # 401/403/404/5xx -> not in
+            return False
+        body = response.text or ""
+        if fail_markers and fail_markers.search(body):  # explicit error/login form
+            return False
+        if 300 <= sc < 400:                            # redirect away from login?
+            loc = response.headers.get("Location", "").lower()
+            return bool(loc) and "login" not in loc
+        new_cookies = set(response.cookies.keys()) - cookies_before
+        return bool(new_cookies)                       # 200 + fresh session cookie
+
+    def _form_login(self, base_url: str, session: requests.Session, *,
+                    auth_path: str, build_payload, prime_path: str = "/",
+                    fail_markers: re.Pattern | None = None,
+                    extra_headers: dict | None = None):
+        """Shared flow: prime the page, POST creds, require login proof."""
+        creds = self._load_creds()
+        base = base_url.rstrip("/")
+        self._fetch(base + prime_path, session)        # prime cookies
+        cookies_before = set(session.cookies.keys())
+
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Origin": base,
+            "Referer": base + prime_path,
+            "Accept": "*/*",
+        }
+        if extra_headers:
+            headers.update(extra_headers)
+
+        for cred in creds[:self.max_creds]:
+            payload = build_payload(cred)
+            logging.info("  [%s] Trying %s on %s", self.name,
+                         cred.get("username") or cred.get("password") or "<empty>", base + auth_path)
+            try:
+                r = session.post(base + auth_path, data=payload, headers=headers,
+                                 timeout=self.timeout, verify=False, allow_redirects=False)
+            except Exception as e:
+                logging.debug("  POST failed: %s", e)
+                time.sleep(1)
+                continue
+            if self._login_proof(r, cookies_before, fail_markers):
+                return True, cred.get("username", ""), cred.get("password", "")
+            time.sleep(1)
+        return False, None, None
 
     # -- overridable steps --------------------------------------------------
 
