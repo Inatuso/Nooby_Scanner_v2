@@ -17,7 +17,12 @@ class ThousandEyesService(Service):
     # Login is a JSON POST to /api/login (Content-Type: application/json) with a
     # CSRF token echoed in the x-csrftoken header — not a form post.
     _AUTH_PATH = "/api/login"
-    _FAIL_MARKERS = re.compile(r'invalid|unauthor|incorrect|"error"|denied', re.IGNORECASE)
+    # Match real failure text only. A bare "error" key is NOT a failure marker:
+    # a success body can legitimately carry "error":null / "errorCode":0, which
+    # used to be misread as a failed login.
+    _FAIL_MARKERS = re.compile(
+        r'invalid\s+(?:user|password|cred)|unauthor|incorrect|login failed|'
+        r'access denied|"error"\s*:\s*"[^"]', re.IGNORECASE)
 
     def try_login(self, base_url, session):
         return self._json_login(

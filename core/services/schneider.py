@@ -17,7 +17,11 @@ class SchneiderService(Service):
     # Link 150 posts JSON to /rs/login (Content-Type: application/json),
     # NOT form-encoded — that was why valid creds were reported as failed.
     _AUTH_PATH = "/rs/login"
-    _FAIL_MARKERS = re.compile(r'login-error-account|invalid|incorrect|denied|"error"', re.IGNORECASE)
+    # Real failure text only. "error":null / errorCode:0 in a success body must
+    # NOT count as a failure, so a bare "error" key is no longer a marker.
+    _FAIL_MARKERS = re.compile(
+        r'login-error-account|invalid\s+(?:user|password|cred)|incorrect|'
+        r'access denied|"error"\s*:\s*"[^"]', re.IGNORECASE)
 
     def try_login(self, base_url, session):
         return self._json_login(
