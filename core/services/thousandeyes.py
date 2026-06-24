@@ -14,8 +14,10 @@ class ThousandEyesService(Service):
     )
     config_path = "/login?redirect=%2Fadvanced"
 
-    # Login is a JSON POST to /api/login (Content-Type: application/json) with a
-    # CSRF token echoed in the x-csrftoken header — not a form post.
+    # Login is a JSON POST to /api/login (Content-Type: application/json). The
+    # CSRF token is NOT a cookie: the appliance returns a rotating token in the
+    # X-Newcsrftoken response header, which must be echoed back as x-csrftoken.
+    # Sending no token gets a flat 403 Forbidden.
     _AUTH_PATH = "/api/login"
     # Match real failure text only. A bare "error" key is NOT a failure marker:
     # a success body can legitimately carry "error":null / "errorCode":0, which
@@ -30,6 +32,6 @@ class ThousandEyesService(Service):
             auth_path=self._AUTH_PATH,
             prime_path=self.config_path,
             build_payload=lambda c: {"username": c["username"], "password": c["password"]},
-            csrf_cookie="csrf", csrf_header="x-csrftoken",
+            csrf_resp_header="X-Newcsrftoken", csrf_header="x-csrftoken",
             fail_markers=self._FAIL_MARKERS,
         )

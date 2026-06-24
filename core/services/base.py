@@ -145,18 +145,22 @@ class Service:
 
     def _json_login(self, base_url: str, session: requests.Session, *,
                     auth_path: str, build_payload, prime_path: str = "/",
-                    csrf_cookie: str | None = None, csrf_header: str = "X-CSRFToken",
+                    csrf_cookie: str | None = None,
+                    csrf_resp_header: str | None = None,
+                    csrf_header: str = "X-CSRFToken",
                     fail_markers: re.Pattern | None = None,
                     extra_headers: dict | None = None):
         """Login flow for JSON APIs (e.g. ThousandEyes, Schneider Link 150).
 
-        These appliances answer the login with a real status code (200 on
-        success, 401/403 on bad creds), so a clean 200 without an error body is
-        the success signal. Optionally echoes a CSRF token taken from a cookie.
+        Success signal: any 2xx without an error body, OR a freshly-set session
+        cookie (Schneider returns 202 + Set-Cookie SID on success). The CSRF
+        token can come from a response header (``csrf_resp_header`` — e.g.
+        ThousandEyes' rotating ``X-Newcsrftoken``) or from a cookie
+        (``csrf_cookie``); whichever is present is echoed in ``csrf_header``.
         """
         creds = self._load_creds()
         base = base_url.rstrip("/")
-        self._fetch(base + prime_path, session)          # prime: get session + CSRF cookie
+        primed = self._fetch(base + prime_path, session)   # prime: session + CSRF
 
         headers = {
             "Content-Type": "application/json",
@@ -167,11 +171,18 @@ class Service:
         }
         if extra_headers:
             headers.update(extra_headers)
-        if csrf_cookie:
+
+        # CSRF token: prefer a response header (rotating token), else a cookie.
+        token = None
+        if csrf_resp_header and primed is not None:
+            token = primed.headers.get(csrf_resp_header)
+        if token is None and csrf_cookie:
             for name, val in session.cookies.items():
                 if csrf_cookie.lower() in name.lower():
-                    headers[csrf_header] = val
+                    token = val
                     break
+        if token:
+            headers[csrf_header] = token
 
         for cred in creds[:self.max_creds]:
             logging.info("  [%s] Trying %s on %s", self.name,
@@ -183,10 +194,15 @@ class Service:
                 logging.debug("  POST failed: %s", e)
                 time.sleep(1)
                 continue
-            if r is not None and r.status_code in (200, 201, 204):
+            if r is not None and 200 <= r.status_code < 300:
                 body = r.text or ""
                 if not (fail_markers and fail_markers.search(body)):
                     return True, cred.get("username", ""), cred.get("password", "")
+            # rotating CSRF: refresh the token from this response for the next try
+            if csrf_resp_header and r is not None:
+                nxt = r.headers.get(csrf_resp_header)
+                if nxt:
+                    headers[csrf_header] = nxt
             time.sleep(1)
         return False, None, None
 
