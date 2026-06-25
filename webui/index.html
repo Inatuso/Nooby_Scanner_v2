@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>MICHELIN Guide — Scanner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="cam">
+    <video class="cam-feed" autoplay playsinline muted></video>
+
+    <header class="topbar">
+      <span class="guide-mark">MICHELIN <em>Guide</em></span>
+      <button class="flip" type="button" aria-label="Changer de caméra">⟲</button>
+    </header>
+
+    <div class="viewfinder" id="finder">
+      <span class="bracket tl"></span>
+      <span class="bracket tr"></span>
+      <span class="bracket bl"></span>
+      <span class="bracket br"></span>
+      <div class="scan-line"></div>
+    </div>
+
+    <p class="hint">Cadrez la devanture ou le menu de l'établissement</p>
+
+    <div class="dock">
+      <button class="shutter" id="shutter" type="button" aria-label="Scanner"></button>
+    </div>
+  </main>
+
+  <div class="scrim" id="scrim" hidden></div>
+
+  <section class="sheet" id="sheet" aria-hidden="true">
+    <span class="grip"></span>
+
+    <div class="sheet-head">
+      <p class="verdict">Établissement reconnu</p>
+      <div class="star-row" aria-label="Deux étoiles">
+        <span class="star">★</span><span class="star">★</span>
+      </div>
+    </div>
+
+    <h1 class="place-name">Le Gabriel</h1>
+    <p class="place-meta">Cuisine française créative · Paris 8<sup>e</sup></p>
+    <p class="distinction">Une cuisine d'excellence — vaut le détour.</p>
+
+    <dl class="facts">
+      <div><dt>Chef</dt><dd>Jérôme Banctel</dd></div>
+      <div><dt>Adresse</dt><dd>42 av. Gabriel, La Réserve</dd></div>
+      <div><dt>Budget</dt><dd>190 – 320 €</dd></div>
+    </dl>
+
+    <div class="sheet-actions">
+      <button class="book-btn" type="button">Réserver une table</button>
+      <button class="ghost-btn" type="button">Voir la fiche complète</button>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>

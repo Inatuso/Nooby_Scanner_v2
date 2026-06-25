@@ -334,6 +334,18 @@ def wizard_new_scan() -> dict | None:
     }
 
 
+def _pick_run(runs: list[dict], prompt: str) -> str:
+    """Accept either the table's row number (#) or a full run ID."""
+    entry = Prompt.ask(prompt, default="").strip()
+    if not entry:
+        return ""
+    if entry.isdigit():
+        idx = int(entry)
+        if 1 <= idx <= len(runs):
+            return runs[idx - 1].get("runid", "")
+    return entry
+
+
 def menu() -> None:
     banner()
 
@@ -365,13 +377,13 @@ def menu() -> None:
         elif choice == "3":
             runs = show_history()
             if runs:
-                rid = Prompt.ask("Run ID to resume (blank to cancel)", default="")
+                rid = _pick_run(runs, "Run # or ID to resume (blank to cancel)")
                 if rid:
                     do_resume(rid)
         elif choice == "4":
             runs = show_history()
             if runs:
-                rid = Prompt.ask("Run ID to open (blank to cancel)", default="")
+                rid = _pick_run(runs, "Run # or ID to open (blank to cancel)")
                 if rid:
                     do_report(rid)
         else:
